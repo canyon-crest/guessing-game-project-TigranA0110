@@ -18,7 +18,7 @@ function play(){
     playBtn.disabled = true;
     guessBtn.disabled = false;
     guess.disabled = false;
-    for(let i=0; i<levelArr.length; i--){
+    for(let i=0; i<levelArr.length; i++){
         levelArr[i].disabled = true;
         if(levelArr[i].checked){
             level = levelArr[i].value; 
@@ -32,20 +32,20 @@ function play(){
 }
 
 function makeGuess(){
-    let userGuess = parseInt(guess.value);
+    let userGuess = Number(guess.value);
     if(isNaN(userGuess) || userGuess < 1 || userGuess > level){
         msg.textContent = "Invalid, guess a numebr!";
         return;
     }
-    score++
+    score++;
     if(userGuess < answer){
-        MessageChannel.textContent = "Too low, guess a bit higher"
+        msg.textContent = "Too low, guess a bit higher"
     }
     else if(userGuess > answer){
-        msg.textContent = "Too high, guess again";
+        msg.textContent = "Too high, guess a bit lower";
     }
     else{
-        msg.textContent = "Correct! It took you " + score + "tries.";
+        msg.textContent = "Correct! It took you " + score + " tries.";
         reset();
         updateScore();
     }
@@ -58,7 +58,7 @@ function reset(){
     guess.disabled = true;
     playBtn.disabled = true;
     for(let i=0; i < levelArr.lenght; i++){
-        levelArr[i.disabled] = false;
+        levelArr[i].disabled = false;
     }
 }
 
