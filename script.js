@@ -10,9 +10,46 @@ guessBtn.addEventListener("click", makeGuess);
 
 function time() {
     let d = new Date();
-    let str = d.getMonth()+1 + "/" + d.getDate() + "/" + d.getFullYear()
-    return str;
+    let day = d.getDate();
+    let monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    let month = monthNames[d.getMonth()];
+    let year = d.getFullYear();
+    let suffix;
+
+    if (day === 1 || day === 21 || day === 31) suffix = "st";
+    else if (day === 2 || day === 22) suffix = "nd";
+    else if (day === 3 || day === 23) suffix = "rd";
+    else suffix = "th";
+
+    let hours = String(d.getHours()).padStart(2, "0");
+    let minutes = String(d.getMinutes()).padStart(2, "0");
+    let seconds = String(d.getSeconds()).padStart(2, "0");
+
+    return month + " " + day + suffix + ", " + year + " " + hours + ":" + minutes + ":" + seconds;
 }
+
+function updateTime() {
+    date.innerHTML = time();
+}
+
+updateTime();
+setInterval(updateTime, 1000);
+
+
+
+function setUserName() {
+    userName = userNameInput.value.trim();
+    if (userName === "") {
+        alert("Please enter your name.");
+        return;
+    }
+    userName = userName[0].toUpperCase() + userName.slice(1).toLowerCase(); // Convert to title case
+    msg.innerHTML = "Hello, " + userName + "! Click a level to start.";
+}
+
+
+
+
 
 function play(){
     playBtn.disabled = true;
