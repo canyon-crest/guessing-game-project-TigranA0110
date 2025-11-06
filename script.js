@@ -17,6 +17,7 @@ const nameBtn = document.getElementById("nameBtn");
 const giveUpBtn = document.getElementById("giveUpBtn");
 const savedTheme = localStorage.getItem("guessTheme");
 
+
 nameBtn.addEventListener("click", setUserName);
 giveUpBtn.addEventListener("click", giveUp);
 
