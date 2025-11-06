@@ -1,12 +1,26 @@
 // add javascript here
-date.textContent = time();
-
 let score, answer, level;
 const levelArr = document.getElementsByName("level");
 const scoreArr = [];
 
 playBtn.addEventListener("click", play);
 guessBtn.addEventListener("click", makeGuess);
+
+// --- Added global tracking ---
+let totalGameTime = 0;
+let totalGamesPlayed = 0;
+let fastestTime = null;
+let roundStartTime = null;
+let userName = "";
+const userNameInput = document.getElementById("name");
+const nameBtn = document.getElementById("nameBtn");
+const giveUpBtn = document.getElementById("giveUpBtn");
+const savedTheme = localStorage.getItem("guessTheme");
+
+nameBtn.addEventListener("click", setUserName);
+giveUpBtn.addEventListener("click", giveUp);
+
+// ------------------------------
 
 function time() {
     let d = new Date();
@@ -35,8 +49,6 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 1000);
 
-
-
 function setUserName() {
     userName = userNameInput.value.trim();
     if (userName === "") {
@@ -47,14 +59,11 @@ function setUserName() {
     msg.innerHTML = "Hello, " + userName + "! Click a level to start.";
 }
 
-
-
-
-
 function play(){
     playBtn.disabled = true;
     guessBtn.disabled = false;
     guess.disabled = false;
+    giveUpBtn.disabled = false; // enable give up button
     for(let i=0; i<levelArr.length; i++){
         levelArr[i].disabled = true;
         if(levelArr[i].checked){
@@ -63,55 +72,132 @@ function play(){
     }
 
     answer = Math.floor(Math.random()*level) + 1;
-    msg.textContent = "Guess a name 1-" + level;
-    guess.placeholder = answer;
+    msg.textContent = "Guess a number 1-" + level + ", " + userName + "!";
+    guess.placeholder = "";
     score = 0;
+
+    // start round timer
+    roundStartTime = new Date().getTime();
 }
 
 function makeGuess(){
     let userGuess = Number(guess.value);
     if(isNaN(userGuess) || userGuess < 1 || userGuess > level){
-        msg.textContent = "Invalid, guess a numebr!";
+        msg.textContent = "Invalid, guess a number!";
         return;
     }
     score++;
+
+    const diff = Math.abs(userGuess - answer);
+    let hint = "";
+    if (diff >= level / 2) hint = "You're freezing cold!";
+    else if (diff >= level / 4) hint = "You're cold!";
+    else if (diff >= level / 10) hint = "You're warm!";
+    else if (diff > 0) hint = "You're hot!";
+    
     if(userGuess < answer){
-        msg.textContent = "Too low, guess a bit higher"
+        msg.textContent = hint + " Too low, guess a bit higher, " + userName + ".";
     }
     else if(userGuess > answer){
-        msg.textContent = "Too high, guess a bit lower";
+        msg.textContent = hint + " Too high, guess a bit lower, " + userName + ".";
     }
     else{
-        msg.textContent = "Correct! It took you " + score + " tries.";
+        const roundEndTime = new Date().getTime();
+        const roundDuration = (roundEndTime - roundStartTime) / 1000;
+        totalGamesPlayed++;
+        totalGameTime += roundDuration;
+
+        if (fastestTime === null || roundDuration < fastestTime) {
+            fastestTime = roundDuration;
+        }
+
+        let performance = "";
+        if (score <= 3) performance = "Excellent job, " + userName + "!";
+        else if (score <= 6) performance = "Good work, " + userName + "!";
+        else performance = "You got it, " + userName + ", but you can do better!";
+
+        msg.textContent = "Correct, " + userName + "! It took you " + score + " tries (" + roundDuration.toFixed(2) + " seconds). " + performance;
+
         reset();
         updateScore();
+        updateTimeStats();
     }
+}
+
+function giveUp() {
+    msg.textContent = "You gave up, " + userName + "! The number was " + answer + ". Your score was set to the range.";
+    score = Number(level);
+    totalGamesPlayed++;
+    totalGameTime += (new Date().getTime() - roundStartTime) / 1000;
+    reset();
+    updateScore();
+    updateTimeStats();
 }
 
 function reset(){
     guessBtn.disabled = true;
+    giveUpBtn.disabled = true;
     guess.value = "";
     guess.placeholder = "";
     guess.disabled = true;
-    playBtn.disabled = true;
-    for(let i=0; i < levelArr.lenght; i++){
+    playBtn.disabled = false; // fixed, allow playing again
+    for(let i=0; i < levelArr.length; i++){
         levelArr[i].disabled = false;
     }
 }
 
 function updateScore(){
     scoreArr.push(score);
-    wins.textContent = "Total wins: " + scoreArr.lenght;
+    wins.textContent = "Total wins: " + scoreArr.length;
     let sum = 0;
-    scoreArr.sort((a, b) => a - b)
-    const lb = document.getElementsByTagName("leaderboard");
+    scoreArr.sort((a, b) => a - b);
+    const lb = document.getElementsByName("leaderboard");
 
-    for(let i=0; i < scoreArr.lenght; i++){
+    for(let i=0; i < scoreArr.length; i++){
         sum += scoreArr[i];
-        if(i < lb.lenght){
+        if(i < lb.length){
             lb[i].textContent = scoreArr[i];
         }
     }
-    let avg = sum/scoreArr.lenght;
+    let avg = sum / scoreArr.length;
     avgScore.textContent = "Average Score: " + avg.toFixed(2);
 }
+
+function updateTimeStats() {
+    let avgTime = totalGameTime / totalGamesPlayed;
+    avgGameTimeDisplay.textContent = "Average game time: " + avgTime.toFixed(2) + " seconds";
+    fastestTimeDisplay.textContent = "Fastest game time: " + (fastestTime ? fastestTime.toFixed(2) : 0) + " seconds";
+}
+
+if (savedTheme === "dark") document.documentElement.classList.add("dark-theme");
+
+themeToggle.addEventListener("click", () => {
+    document.documentElement.classList.toggle("dark-theme");
+    const active = document.documentElement.classList.contains("dark-theme") ? "dark" : "light";
+    localStorage.setItem("guessTheme", active);
+});
+
+const themeStyle = document.createElement("style");
+themeStyle.innerHTML = `
+  :root {
+    --bg: #ffffff;
+    --fg: #111111;
+    --accent: #0b61ff;
+  }
+  .dark-theme {
+    --bg: #121212;
+    --fg: #ffffff;
+    --accent: #68a0ff;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    transition: background 0.25s, color 0.25s;
+  }
+  button { cursor: pointer; }
+  #themeToggle {
+    margin-top: 12px;
+    padding: 6px 10px;
+  }
+`;
+document.head.appendChild(themeStyle);
